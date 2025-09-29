@@ -195,7 +195,7 @@ if ($_POST['action'] ?? '' === 'create_post' && $isAdmin) {
     // Handle image upload
     $imagePath = '';
     if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {
-        $uploadDir = 'uploads/posts/';
+        $uploadDir = 'uploads/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
@@ -205,7 +205,7 @@ if ($_POST['action'] ?? '' === 'create_post' && $isAdmin) {
         $imagePath = $uploadDir . $imageName;
         
         if (move_uploaded_file($_FILES['image']['tmp_name'], $imagePath)) {
-            $imagePath = '/' . $imagePath;
+            $imagePath = $imageName; // Store only filename
         }
     }
     
@@ -700,6 +700,13 @@ if ($isAdmin) {
                                 </span>
                             </div>
                             <p class="text-gray-700 dark:text-gray-300"><?= nl2br(htmlspecialchars($contact['message'])) ?></p>
+                            <?php if (!$contact['is_read']): ?>
+                                <form method="POST" class="mt-2">
+                                    <input type="hidden" name="action" value="mark_read">
+                                    <input type="hidden" name="contact_id" value="<?= $contact['id'] ?>">
+                                    <button type="submit" class="text-xs text-blue-600 hover:text-blue-800">O'qildi deb belgilash</button>
+                                </form>
+                            <?php endif; ?>
                         </div>
                         <?php endforeach; ?>
                     </div>

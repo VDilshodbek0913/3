@@ -13,9 +13,6 @@ const nextConfig = {
   trailingSlash: true,
   skipTrailingSlashRedirect: true,
   distDir: 'out',
-  generateStaticParams: async () => {
-    return []
-  }
 }
 
 export default nextConfig

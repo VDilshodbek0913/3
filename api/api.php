@@ -131,6 +131,7 @@ try {
                 $page = (int)($_GET['page'] ?? 1);
                 $limit = (int)($_GET['limit'] ?? 10);
                 $search = $_GET['search'] ?? '';
+                $category = $_GET['category'] ?? '';
                 $offset = ($page - 1) * $limit;
                 
                 $whereClause = "WHERE 1=1";
@@ -142,6 +143,11 @@ try {
                     $params[] = $searchTerm;
                     $params[] = $searchTerm;
                     $params[] = $searchTerm;
+                }
+                
+                if ($category) {
+                    $whereClause .= " AND p.hashtags LIKE ?";
+                    $params[] = "%$category%";
                 }
                 
                 $sql = "SELECT p.*, u.username, u.avatar,
@@ -285,6 +291,140 @@ try {
             }
             break;
 
+        case 'chat-users':
+            if ($method === 'GET') {
+                $token = $_GET['token'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+                $token = str_replace('Bearer ', '', $token);
+                $search = $_GET['search'] ?? '';
+                
+                // Verify user session
+                $stmt = $pdo->prepare("SELECT user_id FROM user_sessions WHERE session_token = ? AND expires_at > NOW()");
+                $stmt->execute([$token]);
+                $session = $stmt->fetch();
+                
+                if (!$session) {
+                    jsonResponse(['success' => false, 'message' => 'Tizimga kiring'], 401);
+                }
+                
+                $currentUserId = $session['user_id'];
+                
+                $whereClause = "WHERE u.id != ? AND u.is_admin = 0";
+                $params = [$currentUserId];
+                
+                if ($search) {
+                    $whereClause .= " AND u.username LIKE ?";
+                    $params[] = "%$search%";
+                }
+                
+                $sql = "SELECT u.id, u.username, u.avatar,
+                               (SELECT cm.message FROM chat_messages cm 
+                                WHERE (cm.sender_id = u.id AND cm.receiver_id = ?) 
+                                   OR (cm.sender_id = ? AND cm.receiver_id = u.id)
+                                ORDER BY cm.created_at DESC LIMIT 1) as last_message,
+                               (SELECT cm.created_at FROM chat_messages cm 
+                                WHERE (cm.sender_id = u.id AND cm.receiver_id = ?) 
+                                   OR (cm.sender_id = ? AND cm.receiver_id = u.id)
+                                ORDER BY cm.created_at DESC LIMIT 1) as last_message_time,
+                               (SELECT COUNT(*) FROM chat_messages cm 
+                                WHERE cm.sender_id = u.id AND cm.receiver_id = ? AND cm.is_read = 0) as unread_count
+                        FROM users u 
+                        $whereClause
+                        ORDER BY last_message_time DESC, u.username ASC";
+                
+                $params = array_merge([$currentUserId, $currentUserId, $currentUserId, $currentUserId, $currentUserId], $params);
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+                $users = $stmt->fetchAll();
+                
+                jsonResponse(['success' => true, 'users' => $users]);
+            }
+            break;
+            
+        case 'chat-messages':
+            if ($method === 'GET') {
+                $token = $_GET['token'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+                $token = str_replace('Bearer ', '', $token);
+                $userId = $_GET['user_id'] ?? 0;
+                
+                // Verify user session
+                $stmt = $pdo->prepare("SELECT user_id FROM user_sessions WHERE session_token = ? AND expires_at > NOW()");
+                $stmt->execute([$token]);
+                $session = $stmt->fetch();
+                
+                if (!$session) {
+                    jsonResponse(['success' => false, 'message' => 'Tizimga kiring'], 401);
+                }
+                
+                $currentUserId = $session['user_id'];
+                
+                $stmt = $pdo->prepare("SELECT cm.*, u.username as sender_username, u.avatar as sender_avatar
+                                      FROM chat_messages cm
+                                      JOIN users u ON cm.sender_id = u.id
+                                      WHERE (cm.sender_id = ? AND cm.receiver_id = ?) 
+                                         OR (cm.sender_id = ? AND cm.receiver_id = ?)
+                                      ORDER BY cm.created_at ASC");
+                $stmt->execute([$currentUserId, $userId, $userId, $currentUserId]);
+                $messages = $stmt->fetchAll();
+                
+                // Mark messages as read
+                $stmt = $pdo->prepare("UPDATE chat_messages SET is_read = 1 
+                                      WHERE sender_id = ? AND receiver_id = ? AND is_read = 0");
+                $stmt->execute([$userId, $currentUserId]);
+                
+                jsonResponse(['success' => true, 'messages' => $messages]);
+            }
+            break;
+            
+        case 'send-message':
+            if ($method === 'POST') {
+                $data = json_decode(file_get_contents('php://input'), true);
+                $token = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+                $token = str_replace('Bearer ', '', $token);
+                $receiverId = $data['receiver_id'];
+                $message = sanitizeInput($data['message']);
+                
+                // Verify user session
+                $stmt = $pdo->prepare("SELECT user_id FROM user_sessions WHERE session_token = ? AND expires_at > NOW()");
+                $stmt->execute([$token]);
+                $session = $stmt->fetch();
+                
+                if (!$session) {
+                    jsonResponse(['success' => false, 'message' => 'Tizimga kiring'], 401);
+                }
+                
+                $stmt = $pdo->prepare("INSERT INTO chat_messages (sender_id, receiver_id, message) VALUES (?, ?, ?)");
+                $stmt->execute([$session['user_id'], $receiverId, $message]);
+                
+                jsonResponse(['success' => true, 'message' => 'Xabar yuborildi']);
+            }
+            break;
+            
+        case 'profile':
+            if ($method === 'GET') {
+                $username = $_GET['username'] ?? '';
+                
+                if (!$username) {
+                    jsonResponse(['success' => false, 'message' => 'Username kerak'], 400);
+                }
+                
+                $stmt = $pdo->prepare("SELECT u.*, 
+                                             (SELECT COUNT(*) FROM posts p WHERE p.author_id = u.id) as post_count,
+                                             (SELECT COUNT(*) FROM comments c WHERE c.user_id = u.id) as comment_count,
+                                             (SELECT COUNT(*) FROM likes l JOIN posts p ON l.post_id = p.id WHERE p.author_id = u.id) as like_count
+                                      FROM users u 
+                                      WHERE u.username = ?");
+                $stmt->execute([$username]);
+                $profile = $stmt->fetch();
+                
+                if ($profile) {
+                    // Remove sensitive data
+                    unset($profile['password']);
+                    jsonResponse(['success' => true, 'profile' => $profile]);
+                } else {
+                    jsonResponse(['success' => false, 'message' => 'Foydalanuvchi topilmadi'], 404);
+                }
+            }
+            break;
         case 'newsletter-subscribe':
             if ($method === 'POST') {
                 $data = json_decode(file_get_contents('php://input'), true);

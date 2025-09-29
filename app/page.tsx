@@ -299,6 +299,14 @@ export default function BlogHome() {
     loadPosts(searchQuery, 1)
   }
 
+  const viewPost = (postId: number) => {
+    router.push(`/post?id=${postId}`)
+  }
+
+  const viewProfile = (username: string) => {
+    router.push(`/profile?username=${username}`)
+  }
+
   const loadMorePosts = () => {
     const nextPage = page + 1
     setPage(nextPage)
@@ -564,7 +572,7 @@ export default function BlogHome() {
                   </Button>
                   <Avatar
                     className="h-8 w-8 cursor-pointer"
-                    onClick={() => router.push(`/profile/${currentUser.username}`)}
+                    onClick={() => viewProfile(currentUser.username)}
                   >
                     <AvatarImage src={`${apiEndpoints.uploads}/${currentUser.avatar}`} />
                     <AvatarFallback>{currentUser.username[0].toUpperCase()}</AvatarFallback>
@@ -660,7 +668,7 @@ export default function BlogHome() {
                       <MessageCircle className="h-4 w-4 mr-2" />
                       {t.chat}
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => router.push(`/profile/${currentUser.username}`)}>
+                    <Button variant="ghost" size="sm" onClick={() => viewProfile(currentUser.username)}>
                       {t.profile}
                     </Button>
                     <Button variant="outline" size="sm" onClick={logout}>
@@ -718,7 +726,12 @@ export default function BlogHome() {
                     <AvatarFallback>{post.username[0].toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="text-sm font-medium">{post.username}</p>
+                    <p 
+                      className="text-sm font-medium hover:text-primary cursor-pointer"
+                      onClick={() => viewProfile(post.username)}
+                    >
+                      {post.username}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(post.created_at).toLocaleDateString(
                         currentLang === "uz" ? "uz-UZ" : currentLang === "ru" ? "ru-RU" : "en-US",
@@ -777,7 +790,7 @@ export default function BlogHome() {
                     </Button>
                   </div>
 
-                  <Button variant="outline" size="sm" onClick={() => router.push(`/post/${post.id}`)}>
+                  <Button variant="outline" size="sm" onClick={() => viewPost(post.id)}>
                     {t.readMore}
                   </Button>
                 </div>
@@ -1043,7 +1056,11 @@ export default function BlogHome() {
                     variant="ghost"
                     size="sm"
                     className="h-auto p-0 text-muted-foreground hover:text-foreground"
-                    onClick={() => searchByCategory("JavaScript")}
+                    onClick={() => {
+                      setSearchQuery("JavaScript")
+                      setPage(1)
+                      loadPosts("JavaScript", 1)
+                    }}
                   >
                     JavaScript
                   </Button>
@@ -1053,7 +1070,11 @@ export default function BlogHome() {
                     variant="ghost"
                     size="sm"
                     className="h-auto p-0 text-muted-foreground hover:text-foreground"
-                    onClick={() => searchByCategory("Python")}
+                    onClick={() => {
+                      setSearchQuery("Python")
+                      setPage(1)
+                      loadPosts("Python", 1)
+                    }}
                   >
                     Python
                   </Button>
@@ -1063,7 +1084,11 @@ export default function BlogHome() {
                     variant="ghost"
                     size="sm"
                     className="h-auto p-0 text-muted-foreground hover:text-foreground"
-                    onClick={() => searchByCategory("React")}
+                    onClick={() => {
+                      setSearchQuery("React")
+                      setPage(1)
+                      loadPosts("React", 1)
+                    }}
                   >
                     React
                   </Button>
@@ -1073,7 +1098,11 @@ export default function BlogHome() {
                     variant="ghost"
                     size="sm"
                     className="h-auto p-0 text-muted-foreground hover:text-foreground"
-                    onClick={() => searchByCategory("Node.js")}
+                    onClick={() => {
+                      setSearchQuery("Node.js")
+                      setPage(1)
+                      loadPosts("Node.js", 1)
+                    }}
                   >
                     Node.js
                   </Button>
@@ -1083,7 +1112,11 @@ export default function BlogHome() {
                     variant="ghost"
                     size="sm"
                     className="h-auto p-0 text-muted-foreground hover:text-foreground"
-                    onClick={() => searchByCategory("Web Development")}
+                    onClick={() => {
+                      setSearchQuery("Web Development")
+                      setPage(1)
+                      loadPosts("Web Development", 1)
+                    }}
                   >
                     Web Development
                   </Button>

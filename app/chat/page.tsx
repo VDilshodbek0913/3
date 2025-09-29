@@ -88,14 +88,8 @@ export default function ChatPage() {
 
   const loadUsers = async () => {
     try {
-      const data = await apiCall(
-        `${apiEndpoints.posts.replace("?action=posts", "")}?action=chat-users&search=${searchQuery}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("blog_token")}`,
-          },
-        },
-      )
+      const token = localStorage.getItem("blog_token")
+      const data = await apiCall(`${apiEndpoints.chatUsers}&search=${searchQuery}&token=${token}`)
       if (data.success) {
         setUsers(data.users)
       }
@@ -108,14 +102,8 @@ export default function ChatPage() {
     if (!selectedUser) return
 
     try {
-      const data = await apiCall(
-        `${apiEndpoints.posts.replace("?action=posts", "")}?action=chat-messages&user_id=${selectedUser.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("blog_token")}`,
-          },
-        },
-      )
+      const token = localStorage.getItem("blog_token")
+      const data = await apiCall(`${apiEndpoints.chatMessages}&user_id=${selectedUser.id}&token=${token}`)
       if (data.success) {
         setMessages(data.messages)
       }
@@ -129,7 +117,7 @@ export default function ChatPage() {
     if (!newMessage.trim() || !selectedUser) return
 
     try {
-      const data = await apiCall(`${apiEndpoints.posts.replace("?action=posts", "")}?action=send-message`, {
+      const data = await apiCall(apiEndpoints.sendMessage, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("blog_token")}`,
