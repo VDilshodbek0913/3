@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, MessageCircle, Calendar, Mail, MapPin, LinkIcon, Edit } from "lucide-react"
+import { ArrowLeft, MessageCircle, Calendar, Mail, MapPin, Link as LinkIcon, CreditCard as Edit } from "lucide-react"
 import { apiEndpoints, apiCall } from "@/lib/api-config"
 
 interface UserProfile {

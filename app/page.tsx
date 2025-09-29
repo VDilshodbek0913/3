@@ -7,7 +7,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { MessageCircle, Search, Sun, Moon, Globe, Mail, CheckCircle } from "lucide-react"
+import { MessageCircle, Search, Sun, Moon, Globe, Mail, CircleCheck as CheckCircle } from "lucide-react"
 import { useTheme } from "next-themes"
 import { apiEndpoints, apiCall } from "@/lib/api-config"
 
@@ -299,14 +299,6 @@ export default function BlogHome() {
     loadPosts(searchQuery, 1)
   }
 
-  const viewPost = (postId: number) => {
-    router.push(`/post?id=${postId}`)
-  }
-
-  const viewProfile = (username: string) => {
-    router.push(`/profile?username=${username}`)
-  }
-
   const loadMorePosts = () => {
     const nextPage = page + 1
     setPage(nextPage)
@@ -572,7 +564,7 @@ export default function BlogHome() {
                   </Button>
                   <Avatar
                     className="h-8 w-8 cursor-pointer"
-                    onClick={() => viewProfile(currentUser.username)}
+                    onClick={() => router.push(`/profile/${currentUser.username}`)}
                   >
                     <AvatarImage src={`${apiEndpoints.uploads}/${currentUser.avatar}`} />
                     <AvatarFallback>{currentUser.username[0].toUpperCase()}</AvatarFallback>
@@ -668,7 +660,7 @@ export default function BlogHome() {
                       <MessageCircle className="h-4 w-4 mr-2" />
                       {t.chat}
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => viewProfile(currentUser.username)}>
+                    <Button variant="ghost" size="sm" onClick={() => router.push(`/profile/${currentUser.username}`)}>
                       {t.profile}
                     </Button>
                     <Button variant="outline" size="sm" onClick={logout}>
@@ -726,12 +718,7 @@ export default function BlogHome() {
                     <AvatarFallback>{post.username[0].toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p 
-                      className="text-sm font-medium hover:text-primary cursor-pointer"
-                      onClick={() => viewProfile(post.username)}
-                    >
-                      {post.username}
-                    </p>
+                    <p className="text-sm font-medium">{post.username}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(post.created_at).toLocaleDateString(
                         currentLang === "uz" ? "uz-UZ" : currentLang === "ru" ? "ru-RU" : "en-US",
@@ -790,7 +777,7 @@ export default function BlogHome() {
                     </Button>
                   </div>
 
-                  <Button variant="outline" size="sm" onClick={() => viewPost(post.id)}>
+                  <Button variant="outline" size="sm" onClick={() => router.push(`/post/${post.id}`)}>
                     {t.readMore}
                   </Button>
                 </div>
@@ -1056,11 +1043,7 @@ export default function BlogHome() {
                     variant="ghost"
                     size="sm"
                     className="h-auto p-0 text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      setSearchQuery("JavaScript")
-                      setPage(1)
-                      loadPosts("JavaScript", 1)
-                    }}
+                    onClick={() => searchByCategory("JavaScript")}
                   >
                     JavaScript
                   </Button>
@@ -1070,11 +1053,7 @@ export default function BlogHome() {
                     variant="ghost"
                     size="sm"
                     className="h-auto p-0 text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      setSearchQuery("Python")
-                      setPage(1)
-                      loadPosts("Python", 1)
-                    }}
+                    onClick={() => searchByCategory("Python")}
                   >
                     Python
                   </Button>
@@ -1084,11 +1063,7 @@ export default function BlogHome() {
                     variant="ghost"
                     size="sm"
                     className="h-auto p-0 text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      setSearchQuery("React")
-                      setPage(1)
-                      loadPosts("React", 1)
-                    }}
+                    onClick={() => searchByCategory("React")}
                   >
                     React
                   </Button>
@@ -1098,11 +1073,7 @@ export default function BlogHome() {
                     variant="ghost"
                     size="sm"
                     className="h-auto p-0 text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      setSearchQuery("Node.js")
-                      setPage(1)
-                      loadPosts("Node.js", 1)
-                    }}
+                    onClick={() => searchByCategory("Node.js")}
                   >
                     Node.js
                   </Button>
@@ -1112,11 +1083,7 @@ export default function BlogHome() {
                     variant="ghost"
                     size="sm"
                     className="h-auto p-0 text-muted-foreground hover:text-foreground"
-                    onClick={() => {
-                      setSearchQuery("Web Development")
-                      setPage(1)
-                      loadPosts("Web Development", 1)
-                    }}
+                    onClick={() => searchByCategory("Web Development")}
                   >
                     Web Development
                   </Button>
