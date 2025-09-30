@@ -2,9 +2,9 @@
 // Database Setup and Table Creation
 class DatabaseStarter {
     private $host = 'localhost';
-    private $dbname = 'blog_system';
-    private $username = 'root';
-    private $password = '';
+    private $dbname = 'stacknro_blog';
+    private $username = 'stacknro_blog';
+    private $password = 'admin-2025';
     private $pdo;
     
     public function __construct() {
