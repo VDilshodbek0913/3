@@ -279,6 +279,7 @@ export default function BlogHome() {
   const loadPosts = async (searchTerm = "", pageNum = 1) => {
     setLoading(true)
     try {
+      console.log("Loading posts with:", { searchTerm, pageNum, apiUrl: apiEndpoints.posts })
       const data = await apiCall(`${apiEndpoints.posts}&page=${pageNum}&limit=10&search=${searchTerm}`)
       if (data.success) {
         if (pageNum === 1) {
@@ -286,6 +287,7 @@ export default function BlogHome() {
         } else {
           setPosts((prev) => [...prev, ...data.posts])
         }
+        console.log("Posts loaded successfully:", data.posts.length)
       }
     } catch (error) {
       console.error("Error loading posts:", error)

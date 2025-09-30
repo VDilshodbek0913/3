@@ -19,6 +19,8 @@ export const apiEndpoints = {
 
 export const apiCall = async (url: string, options?: RequestInit) => {
   try {
+    console.log("API Call:", { url, method: options?.method || 'GET' })
+    
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -27,11 +29,16 @@ export const apiCall = async (url: string, options?: RequestInit) => {
       },
     })
 
+    console.log("API Response status:", response.status)
+    
     if (!response.ok) {
+      const errorText = await response.text()
+      console.error("API Error Response:", errorText)
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
     const data = await response.json()
+    console.log("API Response data:", data)
     return data
   } catch (error) {
     console.error("API call failed:", error)
