@@ -279,7 +279,6 @@ export default function BlogHome() {
   const loadPosts = async (searchTerm = "", pageNum = 1) => {
     setLoading(true)
     try {
-      console.log("Loading posts with:", { searchTerm, pageNum, apiUrl: apiEndpoints.posts })
       const data = await apiCall(`${apiEndpoints.posts}&page=${pageNum}&limit=10&search=${searchTerm}`)
       if (data.success) {
         if (pageNum === 1) {
@@ -287,7 +286,6 @@ export default function BlogHome() {
         } else {
           setPosts((prev) => [...prev, ...data.posts])
         }
-        console.log("Posts loaded successfully:", data.posts.length)
       }
     } catch (error) {
       console.error("Error loading posts:", error)
@@ -840,7 +838,27 @@ export default function BlogHome() {
 
         {posts.length === 0 && !loading && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">{t.noPostsFound}</p>
+            <div className="max-w-md mx-auto">
+              <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Hech narsa topilmadi</h3>
+              <p className="text-muted-foreground mb-4">
+                {searchQuery ? `"${searchQuery}" bo'yicha natija topilmadi` : "Hozircha postlar mavjud emas"}
+              </p>
+              {searchQuery && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setSearchQuery("")
+                    setPage(1)
+                    loadPosts("", 1)
+                  }}
+                >
+                  Barcha postlarni ko'rish
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </main>

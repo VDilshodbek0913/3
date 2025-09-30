@@ -89,9 +89,13 @@ export default function ChatPage() {
   const loadUsers = async () => {
     try {
       const token = localStorage.getItem("blog_token")
+      console.log("Loading chat users with token:", token ? "present" : "missing")
       const data = await apiCall(`${apiEndpoints.chatUsers}&search=${searchQuery}&token=${token}`)
       if (data.success) {
         setUsers(data.users)
+        console.log("Chat users loaded:", data.users.length)
+      } else {
+        console.error("Failed to load chat users:", data)
       }
     } catch (error) {
       console.error("Error loading users:", error)
@@ -103,9 +107,13 @@ export default function ChatPage() {
 
     try {
       const token = localStorage.getItem("blog_token")
+      console.log("Loading messages between users:", { currentUser: currentUser?.id, selectedUser: selectedUser.id })
       const data = await apiCall(`${apiEndpoints.chatMessages}&user_id=${selectedUser.id}&token=${token}`)
       if (data.success) {
         setMessages(data.messages)
+        console.log("Messages loaded:", data.messages.length)
+      } else {
+        console.error("Failed to load messages:", data)
       }
     } catch (error) {
       console.error("Error loading messages:", error)
@@ -117,6 +125,7 @@ export default function ChatPage() {
     if (!newMessage.trim() || !selectedUser) return
 
     try {
+      console.log("Sending message:", { to: selectedUser.id, message: newMessage })
       const data = await apiCall(apiEndpoints.sendMessage, {
         method: "POST",
         headers: {
@@ -132,6 +141,9 @@ export default function ChatPage() {
         setNewMessage("")
         loadMessages()
         loadUsers() // Refresh user list to update last message
+        console.log("Message sent successfully")
+      } else {
+        console.error("Failed to send message:", data)
       }
     } catch (error) {
       console.error("Send message error:", error)

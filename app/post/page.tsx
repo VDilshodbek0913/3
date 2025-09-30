@@ -82,13 +82,20 @@ export default function PostPage() {
     try {
       setLoading(true)
       setError(null)
+      
+      console.log("Loading post:", postId)
 
-      const data = await apiCall(`${apiEndpoints.posts.replace("?action=posts", "")}?action=post&id=${postId}`)
+      const apiUrl = `${apiEndpoints.posts.replace("?action=posts", "")}?action=post&id=${postId}`
+      console.log("Post API URL:", apiUrl)
+      
+      const data = await apiCall(apiUrl)
 
       if (data.success) {
         setPost(data.post)
         incrementViewCount(postId)
+        console.log("Post loaded successfully:", data.post.title)
       } else {
+        console.error("Post loading failed:", data)
         setError(data.message || "Post topilmadi")
       }
     } catch (error) {
@@ -101,6 +108,7 @@ export default function PostPage() {
 
   const incrementViewCount = async (postId: string) => {
     try {
+      console.log("Incrementing view count for post:", postId)
       await apiCall(`${apiEndpoints.posts.replace("?action=posts", "")}?action=view&post_id=${postId}`, {
         method: "POST",
       })
@@ -111,9 +119,13 @@ export default function PostPage() {
 
   const loadComments = async (postId: string) => {
     try {
+      console.log("Loading comments for post:", postId)
       const data = await apiCall(`${apiEndpoints.comments}&post_id=${postId}`)
       if (data.success) {
         setComments(data.comments)
+        console.log("Comments loaded:", data.comments.length)
+      } else {
+        console.error("Comments loading failed:", data)
       }
     } catch (error) {
       console.error("Error loading comments:", error)

@@ -1,4 +1,9 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/xato.log');
+
 session_start();
 require_once 'api/config.php';
 
@@ -158,6 +163,7 @@ if (isset($_SESSION['admin_token'])) {
 
 // Handle admin login
 if ($_POST['action'] ?? '' === 'admin_login') {
+    logSuccess("Admin login attempt");
     $email = sanitizeInput($_POST['email']);
     $password = $_POST['password'];
     $captcha = $_POST['captcha'];
@@ -175,18 +181,22 @@ if ($_POST['action'] ?? '' === 'admin_login') {
             $stmt->execute([$user['id'], $sessionToken, $expiresAt]);
             
             $_SESSION['admin_token'] = $sessionToken;
+            logSuccess("Admin login successful", ['user_id' => $user['id'], 'email' => $email]);
             header('Location: panel.php');
             exit;
         } else {
+            logError("Admin login failed - invalid credentials", ['email' => $email]);
             $error = 'Email yoki parol noto\'g\'ri';
         }
     } else {
+        logError("Admin login captcha failed", ['provided' => $captcha, 'expected' => $_SESSION['captcha'] ?? '']);
         $error = 'Captcha noto\'g\'ri';
     }
 }
 
 // Handle post creation
 if ($_POST['action'] ?? '' === 'create_post' && $isAdmin) {
+    logSuccess("Post creation attempt");
     $title = sanitizeInput($_POST['title']);
     $content = $_POST['content']; // HTML content
     $hashtags = sanitizeInput($_POST['hashtags']);
@@ -198,6 +208,7 @@ if ($_POST['action'] ?? '' === 'create_post' && $isAdmin) {
         $uploadDir = 'uploads/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
+            logSuccess("Upload directory created");
         }
         
         $imageExtension = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
@@ -206,20 +217,26 @@ if ($_POST['action'] ?? '' === 'create_post' && $isAdmin) {
         
         if (move_uploaded_file($_FILES['image']['tmp_name'], $imagePath)) {
             $imagePath = $imageName; // Store only filename
+            logSuccess("Image uploaded successfully", ['filename' => $imageName]);
+        } else {
+            logError("Image upload failed", ['temp_name' => $_FILES['image']['tmp_name'], 'target' => $imagePath]);
         }
     }
     
     $stmt = $pdo->prepare("INSERT INTO posts (title, slug, content, image, hashtags, author_id) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->execute([$title, $slug, $content, $imagePath, $hashtags, $currentUser['id']]);
     
+    logSuccess("Post created successfully", ['title' => $title, 'author_id' => $currentUser['id']]);
     $success = 'Post muvaffaqiyatli yaratildi';
 }
 
 // Handle post deletion
 if ($_POST['action'] ?? '' === 'delete_post' && $isAdmin) {
     $postId = (int)$_POST['post_id'];
+    logSuccess("Post deletion attempt", ['post_id' => $postId]);
     $stmt = $pdo->prepare("DELETE FROM posts WHERE id = ?");
     $stmt->execute([$postId]);
+    logSuccess("Post deleted successfully", ['post_id' => $postId]);
     $success = 'Post o\'chirildi';
 }
 

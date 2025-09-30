@@ -69,14 +69,19 @@ export default function ProfilePage() {
     try {
       setLoading(true)
       setError(null)
+      
+      console.log("Loading profile:", username)
 
-      const data = await apiCall(
-        `${apiEndpoints.posts.replace("?action=posts", "")}?action=profile&username=${username}`,
-      )
+      const apiUrl = `${apiEndpoints.posts.replace("?action=posts", "")}?action=profile&username=${username}`
+      console.log("Profile API URL:", apiUrl)
+      
+      const data = await apiCall(apiUrl)
 
       if (data.success) {
         setProfile(data.profile)
+        console.log("Profile loaded successfully:", data.profile.username)
       } else {
+        console.error("Profile loading failed:", data)
         setError(data.message || "Foydalanuvchi topilmadi")
       }
     } catch (error) {
