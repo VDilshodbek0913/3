@@ -1,14 +1,15 @@
 <?php
 error_reporting(E_ALL);
-ini_set('display_errors', 0);
+ini_set('display_errors', 1);
 ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/../xato.log');
 
 // Database Configuration
 class Database {
     private $host = 'localhost';
-    private $dbname = 'blog_system';
-    private $username = 'root';
-    private $password = '';
+    private $dbname = 'stacknro_blog';
+    private $username = 'stacknro_blog';
+    private $password = 'admin-2025';
     private $pdo;
     
     public function __construct() {
@@ -19,10 +20,12 @@ class Database {
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false
             ]);
+            error_log("Database connection successful: " . date('Y-m-d H:i:s'));
         } catch(PDOException $e) {
-            error_log("Database connection failed: " . $e->getMessage());
+            $errorMsg = "Database connection failed: " . $e->getMessage() . " at " . date('Y-m-d H:i:s');
+            error_log($errorMsg);
             header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'Ma\'lumotlar bazasiga ulanishda xato']);
+            echo json_encode(['success' => false, 'message' => 'Ma\'lumotlar bazasiga ulanishda xato', 'error' => $e->getMessage()]);
             exit;
         }
     }
@@ -30,6 +33,28 @@ class Database {
     public function getConnection() {
         return $this->pdo;
     }
+}
+
+// Enhanced logging function
+function logError($message, $context = []) {
+    $timestamp = date('Y-m-d H:i:s');
+    $logMessage = "[$timestamp] $message";
+    if (!empty($context)) {
+        $logMessage .= " | Context: " . json_encode($context, JSON_UNESCAPED_UNICODE);
+    }
+    $logMessage .= " | IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+    $logMessage .= " | User Agent: " . ($_SERVER['HTTP_USER_AGENT'] ?? 'unknown');
+    error_log($logMessage . "\n", 3, __DIR__ . '/../xato.log');
+}
+
+// Enhanced success logging
+function logSuccess($message, $context = []) {
+    $timestamp = date('Y-m-d H:i:s');
+    $logMessage = "[$timestamp] SUCCESS: $message";
+    if (!empty($context)) {
+        $logMessage .= " | Context: " . json_encode($context, JSON_UNESCAPED_UNICODE);
+    }
+    error_log($logMessage . "\n", 3, __DIR__ . '/../xato.log');
 }
 
 // Security Functions
@@ -56,6 +81,8 @@ function createSlug($title) {
 
 // Response helper
 function jsonResponse($data, $status = 200) {
+    // Log all responses
+    logSuccess("API Response", ['status' => $status, 'data' => $data]);
     http_response_code($status);
     header('Content-Type: application/json');
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
